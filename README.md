@@ -153,6 +153,11 @@ Here is an example of using SimQN.
   - Applications: BB84 Protocol, Entanglement Swapping Protocol.
   - Tools: Rnd Tools.
 
+## Platform Extension
+  - Abane et al. developed [MQNS](https://ieeexplore.ieee.org/abstract/document/11334170) based on SimQN v0.1.5, leveraging the simulator core, entities, and tools to enable simulation under dynamic, heterogeneous configurations.
+  - Majid K et al. integrated SimQN with the open-source OpenAirInterface (OAI) stack to deploy a 5G standalone network capable of supporting quantum operations , proposing the [quantum-inspired RAN (Q-RAN)](https://ieeexplore.ieee.org/abstract/document/11432359), a next-generation framework.
+  - Josipa et al. enabled SimQN to accept structured data from upstream via the HTTP protocol by utilizing FastAPI, thereby developing a [Docker environment for QKD network simulations](https://repozitorij.fpz.unizg.hr/object/fpz:3666).
+
 ## How to contribute?
 Welcome to contribute through Github Issue or Pull Requests. Please refer to the [develop guide](https://qnlab-ustc.github.io/SimQN/develop.html). If you have any questions, you are welcome to contact the developers via e-mail.
 
@@ -172,6 +177,9 @@ Other contributors includes:
 * Yuqi Yang, School of Cyber Science and Technology, University of Science and Technology of China, China.
 * Bing Yang, School of Cyber Science and Technology, University of Science and Technology of China, China.
 * Xumin Gao, School of Cyber Science and Technology, University of Science and Technology of China, China.
+* Yuxin Chen, School of Information Science and Technology, University of Science and Technology of China, China.
+* ShaoChuang Heng, School of Cyber Science and Technology, University of Science and Technology of China, China.
+* Jianfeng Niu, School of Cyber Science and Technology, University of Science and Technology of China, China.
 
 ## Citation
 

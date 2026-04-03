@@ -8,6 +8,7 @@
   - [First sight of SimQN](#first-sight-of-simqn)
   - [Get Help](#get-help)
   - [Release History](#release-history)
+  - [Platform Extension](#platform-extension)
   - [How to contribute?](#how-to-contribute)
   - [License and Authors](#license-and-authors)
   - [Ciatation](#ciatation)

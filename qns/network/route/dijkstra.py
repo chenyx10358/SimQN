@@ -22,19 +22,6 @@ from qns.entity.node.node import QNode
 from qns.entity.qchannel.qchannel import QuantumChannel
 from qns.entity.cchannel.cchannel import ClassicChannel
 from qns.network.route.route import RouteImpl, NetworkRouteError
-import heapq
-
-
-class heapitem:
-    def __init__(self, item: object, key: float) -> None:
-        self.item = item
-        self.key = key
-
-    def __lt__(self, other) -> bool:
-        return self.key < other.key
-
-    def __iter__(self):
-        return iter((self.item, self.key))
 
 
 class DijkstraRouteAlgorithm(RouteImpl):
@@ -44,11 +31,8 @@ class DijkstraRouteAlgorithm(RouteImpl):
 
     INF = math.inf
 
-    def __init__(
-        self,
-        name: str = "dijkstra",
-        metric_func: Callable[[Union[QuantumChannel, ClassicChannel]], float] = None,
-    ) -> None:
+    def __init__(self, name: str = "dijkstra",
+                 metric_func: Callable[[Union[QuantumChannel, ClassicChannel]], float] = None) -> None:
         """
         Args:
             name: the routing algorithm's name
@@ -57,68 +41,51 @@ class DijkstraRouteAlgorithm(RouteImpl):
         """
         self.name = name
         self.route_table = {}
-
         if metric_func is None:
             self.metric_func = lambda _: 1
         else:
             self.metric_func = metric_func
 
-        self.pathset = {}
+    def build(self, nodes: List[QNode], channels: List[Union[QuantumChannel, ClassicChannel]]):
 
-    def build(
-        self, nodes: List[QNode], channels: List[Union[QuantumChannel, ClassicChannel]]
-    ):
-        neighbors_table = {node: [] for node in nodes} 
-        for channel in channels:
-            assert len(channel.node_list) == 2
-            metric = self.metric_func(channel)
+        for n in nodes:
+            selected = []
+            unselected = [u for u in nodes]
 
-            [node1, node2] = channel.node_list
-            neighbors_table[node1].append((node2, metric))
-            neighbors_table[node2].append((node1, metric))
+            d = {}
+            for nn in nodes:
+                if nn == n:
+                    d[n] = [0, []]
+                else:
+                    d[nn] = [self.INF, [nn]]
 
-        for srcn in nodes:
-            nodes_cost = {node: self.INF for node in nodes}
-            nodes_cost[srcn] = 0
-            prev_node = {node: None for node in nodes}
+            while len(unselected) != 0:
+                ms = unselected[0]
+                mi = d[ms][0]
 
-            heap = []
-            heapq.heappush(heap, heapitem(srcn, 0))
+                for s in unselected:
+                    if d[s][0] < mi:
+                        ms = s
+                        mi = d[s][0]
 
-            while len(heap) != 0:
-                (node, cost) = heapq.heappop(heap)
+                # d[ms] = [d[ms][0], d[ms][1]]
+                selected.append(ms)
+                unselected.remove(ms)
 
-                if cost > nodes_cost[node]:
-                    continue
+                for link in channels:
+                    if ms not in link.node_list:
+                        continue
+                    if len(link.node_list) < 2:
+                        raise NetworkRouteError("broken link")
+                    idx = link.node_list.index(ms)
+                    idx_s = 1 - idx
+                    s = link.node_list[idx_s]
+                    if s in unselected and d[s][0] > d[ms][0] + self.metric_func(link):
+                        d[s] = [d[ms][0] + self.metric_func(link), [ms] + d[ms][1]]
 
-                for neigh, metric in neighbors_table[node]:
-                    neigh_new_cost = cost + metric
-                    if neigh_new_cost < nodes_cost[neigh]:
-                        nodes_cost[neigh] = neigh_new_cost
-                        heapq.heappush(heap, heapitem(neigh, nodes_cost[neigh]))
-                        prev_node[neigh] = node
-
-            srcpath={}
-            for dst in nodes:
-                if nodes_cost[dst] == self.INF:
-                    continue
-
-                if dst in srcpath:
-                    continue
-                
-                path = []
-                curr = dst
-                while curr is not None:
-                    path.append(curr)
-                    curr = prev_node[curr]
-                path.reverse()
-
-                while len(path) !=0:
-                    if path[-1] in srcpath:
-                        break
-                    srcpath[path[-1]] = [nodes_cost[path[-1]], path[:]]
-                    path.pop()
-            self.route_table[srcn]=srcpath
+            for nn in nodes:
+                d[nn][1] = [nn] + d[nn][1]
+            self.route_table[n] = d
 
     def query(self, src: QNode, dest: QNode) -> List[Tuple[float, QNode, List[QNode]]]:
         """
@@ -132,17 +99,17 @@ class DijkstraRouteAlgorithm(RouteImpl):
             A list of route paths. The result should be sortted by the priority.
             The element is a tuple containing: metric, the next-hop and the whole path.
         """
-        src_routelist: Dict[QNode, List[float, List[QNode]]] = self.route_table.get(src, None)
-        if src_routelist is None:
+        ls: Dict[QNode, List[float, List[QNode]]] = self.route_table.get(src, None)
+        if ls is None:
             return []
-        
-        dst_path = src_routelist.get(dest, None)
-        if dst_path is None:
+        le = ls.get(dest, None)
+        if le is None:
             return []
-
         try:
-            metric = dst_path[0]
-            path: List[QNode] = dst_path[1][:]
+            metric = le[0]
+            path: List[QNode] = le[1]
+            path = path.copy()
+            path.reverse()
             if len(path) <= 1 or metric == self.INF:
                 next_hop = None
                 return []

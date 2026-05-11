@@ -18,10 +18,10 @@
 from typing import Any, List
 
 from qns.simulator.ts import Time
-from cchannel import *
 from qns.entity.node.node import QNode
 from qns.models.delay.delay import DelayModel
 from qns.simulator.simulator import Simulator
+from qns.entity.cchannel.cchannel import *
 
 
 class ClassicChannelEx(ClassicChannel):

@@ -17,9 +17,11 @@
 
 from typing import Any, List
 
+from qns.simulator.ts import Time
 from cchannel import *
 from qns.entity.node.node import QNode
 from qns.models.delay.delay import DelayModel
+from qns.simulator.simulator import Simulator
 
 
 class ClassicChannelEx(ClassicChannel):
@@ -31,7 +33,7 @@ class ClassicChannelEx(ClassicChannel):
     def __init__(
         self,
         name: str = None,
-        node_list: List[QNode] = ...,
+        node_list: List[QNode] = [],
         bandwidth: int = 0,
         delay: float | DelayModel = 0,
         length: float | None = 0,
@@ -42,16 +44,17 @@ class ClassicChannelEx(ClassicChannel):
             name, node_list, bandwidth, delay, length, drop_rate, max_buffer_size
         )
         self.reliable = True
-        self.first_run = True
+
+    def install(self, simulator: Simulator) -> None:
+        assert len(self.node_list) == 2
+        self.bidir_param = {
+            self.node_list[0]: self.param(),
+            self.node_list[1]: self.param(),
+        }
+        self.first_run = False
+        return super().install(simulator)
 
     def send(self, packet: ClassicPacket, next_hop: QNode):
-        if self.first_run:
-            assert len(self.node_list) == 2
-            self.bidir_param = {
-                self.node_list[0]: self.param(),
-                self.node_list[1]: self.param(),
-            }
-            self.first_run = False
 
         if next_hop not in self.node_list:
             raise NextHopNotConnectionException
